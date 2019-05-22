@@ -1,1 +1,22 @@
-<h1>Hello World</h1>
+<html>
+  <head>
+    <script type="text/javascript">
+      // Get Json Data
+      fetch("assets/data.csv")
+        .then(response => {
+          return response.json();
+        })
+        .then(data => {
+          console.log("Data:", data);
+        })
+        .catch(err => {
+          // If something goes wrong log it
+          console.log("No data found");
+        });
+    </script>
+  </head>
+
+  <body>
+    <h1>Hello World</h1>
+  </body>
+</html>
