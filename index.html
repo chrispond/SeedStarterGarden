@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 	<script type="text/javascript">
@@ -253,13 +252,24 @@
         let wateredChartData = this.SeedDayData;
 
         const parsedWateredData = wateredChartData.map(day => {
+          
           const dateString = SeedGardenData.parseDate(day[0].date);
-          const watered = day.filter(item => item.isWatering).length;
-          return [dateString, watered];
+          const time = SeedGardenData.parseDate(day[0].date);
+          const watered = day.filter(item => item.isWatering);
+          const wateredLength = watered.length;
+          const wateredData = watered.map(item => [1, item.time]);
+          let wateredArray = [];
+
+          for(let i = 0; i < wateredLength; i++){
+            const waterItem = watered[i];
+            wateredArray.push(waterItem.time.substring(0,waterItem.time.length-3));
+          }
+
+          return [dateString, wateredLength, wateredArray.toString().replace(/,/g, ' ')];
         });
 
         // // Add Labels
-        parsedWateredData.unshift(['Date', 'Watered']);
+        parsedWateredData.unshift(['Date', 'Watered', { role: 'annotation' }]);
 
           const googleReadyData = google.visualization.arrayToDataTable(parsedWateredData);
 
@@ -269,6 +279,10 @@
             titleTextStyle: SeedGardenData.titleTextStyles(),
             chartArea: SeedGardenData.chartAreaOptions(),
             legend: {position: 'none'},
+            annotations: {
+              highContrast: true,
+              textStyle: SeedGardenData.textStyles()
+            },
             width: wateredChartData.length*75,
             hAxis: {
               title: 'Date',
@@ -283,7 +297,7 @@
             }
           };
 
-          var chart = new google.visualization.AreaChart(document.getElementById('watered-chart'));
+          var chart = new google.visualization.ColumnChart(document.getElementById('watered-chart'));
           chart.draw(googleReadyData, googleChartOptions);
       }
     }
@@ -292,13 +306,10 @@
 
 	</script>
 </head>
-
 <body>
 	<div id="temp-chart"></div>
 	<div id="humid-chart"></div>
 	<div id="watered-chart"></div>
 	<div id="soil-chart"></div>
-
 </body>
-
 </html>
