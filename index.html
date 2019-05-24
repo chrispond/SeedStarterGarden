@@ -1,22 +1,304 @@
-<html>
-  <head>
-    <script type="text/javascript">
-      // Get Json Data
-      fetch("data.csv")
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script type="text/javascript">
+		class SeedGardenData {
+      static textStyles(){
+        return {
+            fontSize: 10,
+            color: '#999'
+          }
+      }
+
+      static titleTextStyles(){
+        return {
+            bold: true,
+            fontSize: 12,
+            color: '#333'
+          }
+      }
+
+      static chartLegendOptions(){
+        return {
+          position: 'in',
+          textStyle: SeedGardenData.titleTextStyles()
+        }
+      }
+
+      static chartAreaOptions(){
+        return {
+          height: '50%',
+          top: 60,
+          left: 60
+        }
+      }
+
+      static getMonth(month){
+        const monthLabel = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return monthLabel[month-1];
+      }
+
+      static getDay(day){
+        return day + (day > 0 ? ['th', 'st', 'nd', 'rd'][(day > 3 && day < 21) || day % 10 > 3 ? 0 : day % 10] : '');
+      }
+
+      static parseDate(date){
+        const dateArray = date.split('-');
+        const dateMonth = SeedGardenData.getMonth(dateArray[1]);
+        const dateDay = SeedGardenData.getDay(dateArray[2]);;
+        const dateYear = dateArray[0];
+
+        return `${dateMonth} ${dateDay} ${dateYear}`;
+      }
+
+      constructor(){
+        // Properties
+        
+        this.SeedData = new Array();
+        this.SeedDayData = new Array();
+
+        // Initialize google charts
+        google.charts.load('current', {'packages':['corechart', 'bar']});
+        google.charts.setOnLoadCallback(this._fetchData());
+      }
+
+      _buildCharts() {
+        this._waterChart();
+        this._tempChart();
+        this._humidChart();
+        this._soilChart();
+      }
+
+      _dayData() {
+        let currentDay;
+        let days = [];
+        let dailyChartData = this.SeedData;
+        
+
+        for(let i=0; i<dailyChartData.length; i++){
+          const item = dailyChartData[i];
+          if(!currentDay || currentDay !== item.date){
+            currentDay = item.date;
+            days.push(item.date);
+          }
+        }
+
+        this.SeedDayData = days.map(day => {
+          return dailyChartData.filter(item => item.date === day);
+        });
+      }
+
+      _soilChart() {
+        let soilChartData = this.SeedDayData;
+
+        const parsedSoilData = soilChartData.map(day => {
+          const dateString = SeedGardenData.parseDate(day[0].date);
+          const soilMoisture = day[0].soilMoisture;
+          return [dateString, soilMoisture];
+        });
+
+        // // Add Labels
+        parsedSoilData.unshift(['Date', 'Soil Moisture']);
+
+          const googleReadyData = google.visualization.arrayToDataTable(parsedSoilData);
+
+          const googleChartOptions = {
+            title: 'Soil Moisture Data',
+            textStyle: SeedGardenData.textStyles(),
+            titleTextStyle: SeedGardenData.titleTextStyles(),
+            chartArea: SeedGardenData.chartAreaOptions(),
+            legend: {position: 'none'},
+            width: soilChartData.length*75,
+            hAxis: {
+              title: 'Date',
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            },
+            vAxis: {
+              title: 'conductivity',
+              minValue: 300,
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            }
+          };
+
+          var chart = new google.visualization.AreaChart(document.getElementById('soil-chart'));
+          chart.draw(googleReadyData, googleChartOptions);
+      }
+
+      _humidChart() {
+        let humidChartData = this.SeedDayData;
+
+        const parsedHumidData = humidChartData.map(day => {
+          const dateString = SeedGardenData.parseDate(day[0].date);
+          const humidHigh = Math.max.apply(Math, day.map(item => item.humid));
+          const humidLow = Math.min.apply(Math, day.map(item => item.humid));
+          return [dateString, humidLow, humidHigh ];
+        });
+
+        const highestValue = Math.max.apply(Math, parsedHumidData.map(item => item[2]));
+        const lowestValue = Math.min.apply(Math, parsedHumidData.map(item => item[1]));
+
+        // // Add Labels
+        parsedHumidData.unshift(['Date', `Low (${lowestValue}%)`, `High (${highestValue}%)`]);
+
+          const googleReadyData = google.visualization.arrayToDataTable(parsedHumidData);
+
+          const googleChartOptions = {
+            title: 'Humidity Data',
+            textStyle: SeedGardenData.textStyles(),
+            titleTextStyle: SeedGardenData.titleTextStyles(),
+            chartArea: SeedGardenData.chartAreaOptions(),
+            legend: SeedGardenData.chartLegendOptions(),
+            width: humidChartData.length*75,
+            hAxis: {
+              title: 'Date',
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            },
+            vAxis: {
+              title: '%',
+              minValue: 0,
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            }
+          };
+
+          var chart = new google.visualization.AreaChart(document.getElementById('humid-chart'));
+          chart.draw(googleReadyData, googleChartOptions);
+      }
+
+      _tempChart() {
+        let tempChartData = this.SeedDayData;
+
+        const parsedTempData = tempChartData.map(day => {
+          const dateString = SeedGardenData.parseDate(day[0].date);
+          const tempHigh = Math.max.apply(Math, day.map(item => item.temp));
+          const tempLow = Math.min.apply(Math, day.map(item => item.temp));
+          return [dateString, tempLow, tempHigh];
+        });
+
+        const highestValue = Math.max.apply(Math, parsedTempData.map(item => item[2]));
+        const lowestValue = Math.min.apply(Math, parsedTempData.map(item => item[1]));
+
+        // // Add Labels
+        parsedTempData.unshift(['Date', `Low (${lowestValue})`, `High (${highestValue})`]);
+
+          const googleReadyData = google.visualization.arrayToDataTable(parsedTempData);
+
+          const googleChartOptions = {
+            title: 'Temperature Data',
+            textStyle: SeedGardenData.textStyles(),
+            titleTextStyle: SeedGardenData.titleTextStyles(),
+            chartArea: SeedGardenData.chartAreaOptions(),
+            legend: SeedGardenData.chartLegendOptions(),
+            width: tempChartData.length*75,
+            hAxis: {
+              title: 'Date',
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            },
+            vAxis: {
+              title: 'Celcius',
+              minValue: 0,
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            }
+          };
+
+          var chart = new google.visualization.AreaChart(document.getElementById('temp-chart'));
+          chart.draw(googleReadyData, googleChartOptions);
+      }
+
+      _fetchData() {
+        fetch("data.csv")
         .then(response => {
-          return response.json();
+          return response.text();
         })
         .then(data => {
-          console.log("Data:", data);
+          // Convert csv rows to array
+          const dataRows = data.split('\n');
+
+          // Convert the rows to object (& remove first row because it's the header)
+          const parsedData = dataRows.slice(1, dataRows.length).map(row => {
+            // Conver csv columns to array
+            const dataColumns = row.split(',');
+
+            let dataObject = {};
+
+            dataObject.date = dataColumns[0];
+            dataObject.time = dataColumns[1];
+            dataObject.temp = Number(dataColumns[2]);
+            dataObject.humid = Number(dataColumns[3]);
+            dataObject.soilMoisture = Number(dataColumns[4]);
+            dataObject.waterLevel = Number(dataColumns[5]);
+            dataObject.isWatering = Number(dataColumns[6]) === 1;
+
+            return dataObject;
+          });
+
+          this.SeedData = parsedData;
+          this._dayData();
+          this._buildCharts();
         })
         .catch(err => {
           // If something goes wrong log it
-          console.log("No data found");
+          console.log("Something went wrong", err);
         });
-    </script>
-  </head>
+      }
 
-  <body>
-    <h1>Hi World</h1>
-  </body>
+      _waterChart() {
+        let wateredChartData = this.SeedDayData;
+
+        const parsedWateredData = wateredChartData.map(day => {
+          const dateString = SeedGardenData.parseDate(day[0].date);
+          const watered = day.filter(item => item.isWatering).length;
+          return [dateString, watered];
+        });
+
+        // // Add Labels
+        parsedWateredData.unshift(['Date', 'Watered']);
+
+          const googleReadyData = google.visualization.arrayToDataTable(parsedWateredData);
+
+          const googleChartOptions = {
+            title: 'Watered Data',
+            textStyle: SeedGardenData.textStyles(),
+            titleTextStyle: SeedGardenData.titleTextStyles(),
+            chartArea: SeedGardenData.chartAreaOptions(),
+            legend: {position: 'none'},
+            width: wateredChartData.length*75,
+            hAxis: {
+              title: 'Date',
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            },
+            vAxis: {
+              title: '# of times',
+              minValue: 0,
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            }
+          };
+
+          var chart = new google.visualization.AreaChart(document.getElementById('watered-chart'));
+          chart.draw(googleReadyData, googleChartOptions);
+      }
+    }
+
+    new SeedGardenData();
+
+	</script>
+</head>
+
+<body>
+	<div id="temp-chart"></div>
+	<div id="humid-chart"></div>
+	<div id="watered-chart"></div>
+	<div id="soil-chart"></div>
+
+</body>
+
 </html>
