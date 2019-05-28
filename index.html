@@ -235,6 +235,7 @@
 
           // Convert the rows to object (& remove first row because it's the header)
           const parsedData = dataRows.slice(1, dataRows.length).map(row => {
+		  console.log('row', row);
             // Conver csv columns to array
             const dataColumns = row.split(',');
 
