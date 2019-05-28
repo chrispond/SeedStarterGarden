@@ -81,9 +81,6 @@
         let days = [];
         let dailyChartData = this.SeedData;
 	const dailyChartDataLength = dailyChartData.length;
-	      
-	      console.log('_dayData', dailyChartData);
-        
 
         for(let i=0; i<dailyChartDataLength; i++){
           const item = dailyChartData[i];
@@ -100,8 +97,6 @@
 
       _soilChart() {
         let soilChartData = this.SeedDayData;
-	      
-	      console.log('_soilChart', soilChartData);
 
         const parsedSoilData = soilChartData.map(day => {
           const dateString = SeedGardenData.parseDate(day[0].date);
@@ -150,8 +145,6 @@
 
         const highestValue = Math.max.apply(Math, parsedHumidData.map(item => item[2]));
         const lowestValue = Math.min.apply(Math, parsedHumidData.map(item => item[1]));
-	      
-	      console.log('_humidChart', parsedHumidData.map(item => item[2]));
 
         // // Add Labels
         parsedHumidData.unshift(['Date', `Low (${lowestValue}%)`, `High (${highestValue}%)`]);
@@ -235,7 +228,6 @@
 
           // Convert the rows to object (& remove first row because it's the header)
           const parsedData = dataRows.slice(1, dataRows.length).map(row => {
-		  console.log('row', row);
             // Conver csv columns to array
             const dataColumns = row.split(',');
 
