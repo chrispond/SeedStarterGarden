@@ -97,6 +97,8 @@
 
       _soilChart() {
         let soilChartData = this.SeedDayData;
+	      
+	      console.log('_soilChart', soilChartData);
 
         const parsedSoilData = soilChartData.map(day => {
           const dateString = SeedGardenData.parseDate(day[0].date);
@@ -145,6 +147,8 @@
 
         const highestValue = Math.max.apply(Math, parsedHumidData.map(item => item[2]));
         const lowestValue = Math.min.apply(Math, parsedHumidData.map(item => item[1]));
+	      
+	      console.log('_humidChart', parsedHumidData.map(item => item[2]));
 
         // // Add Labels
         parsedHumidData.unshift(['Date', `Low (${lowestValue}%)`, `High (${highestValue}%)`]);
