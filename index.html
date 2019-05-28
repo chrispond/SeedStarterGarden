@@ -101,11 +101,14 @@
         const parsedSoilData = soilChartData.map(day => {
           const dateString = SeedGardenData.parseDate(day[0].date);
           const soilMoisture = day[0].soilMoisture;
-          return [dateString, soilMoisture];
+          const soilHigh = Math.max.apply(Math, day.map(item => item.soilMoisture));
+          const soilLow = Math.min.apply(Math, day.map(item => item.soilMoisture));
+
+          return [dateString, soilMoisture, soilHigh, soilLow];
         });
 
         // // Add Labels
-        parsedSoilData.unshift(['Date', 'Soil Moisture']);
+        parsedSoilData.unshift(['Date', 'Day Start', 'Day High', 'Day Low']);
 
           const googleReadyData = google.visualization.arrayToDataTable(parsedSoilData);
 
@@ -114,7 +117,7 @@
             textStyle: SeedGardenData.textStyles(),
             titleTextStyle: SeedGardenData.titleTextStyles(),
             chartArea: SeedGardenData.chartAreaOptions(),
-            legend: {position: 'none'},
+            legend: SeedGardenData.chartLegendOptions(),
             width: soilChartData.length*75,
             hAxis: {
               title: 'Date',
