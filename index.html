@@ -231,7 +231,7 @@
         })
         .then(data => {
           // Convert csv rows to array
-          const dataRows = data.split('\n');
+          const dataRows = data.split('\n').filter(row => row);
 
           // Convert the rows to object (& remove first row because it's the header)
           const parsedData = dataRows.slice(1, dataRows.length).map(row => {
