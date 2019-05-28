@@ -2,11 +2,10 @@
 <html lang="en">
 
 <head>
-	
-	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 	<script type="text/javascript" src="https://www.google.com/jsapi?autoload= 
 {'modules':[{'name':'visualization','version':'1.1','packages':
 ['corechart']}]}"></script>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 	<script type="text/javascript">
 		class SeedGardenData {
       static textStyles(){
@@ -73,6 +72,8 @@
         this._soilChart();
         this._tempChart();
         this._waterChart();
+        this._waterTimeChart();
+        this._waterDurationChart();
       }
 
       _dayData() {
@@ -262,19 +263,12 @@
           const time = SeedGardenData.parseDate(day[0].date);
           const watered = day.filter(item => item.isWatering);
           const wateredLength = watered.length;
-          const wateredData = watered.map(item => [1, item.time]);
-          let wateredArray = [];
 
-          for(let i = 0; i < wateredLength; i++){
-            const waterItem = watered[i];
-            wateredArray.push(waterItem.time.substring(0,waterItem.time.length-3));
-          }
-
-          return [dateString, wateredLength, wateredArray.toString().replace(/,/g, ' ')];
+          return [dateString, wateredLength];
         });
 
         // // Add Labels
-        parsedWateredData.unshift(['Date', 'Watered', { role: 'annotation' }]);
+        parsedWateredData.unshift(['Date', 'Watered']);
 
           const googleReadyData = google.visualization.arrayToDataTable(parsedWateredData);
 
@@ -305,6 +299,107 @@
           var chart = new google.visualization.ColumnChart(document.getElementById('watered-chart'));
           chart.draw(googleReadyData, googleChartOptions);
       }
+
+      _waterTimeChart() {
+        let wateredTimeChartData = this.SeedData;
+        const wateredTimeChartDataFiltered = wateredTimeChartData.filter(item => item.isWatering);
+
+        const parsedWateredTimeData = wateredTimeChartDataFiltered.map(entry => {
+          const dateString = SeedGardenData.parseDate(entry.date);
+          const time = entry.time.substring(0,entry.time.length-3);
+          const hour = time.substring(0,time.length-3);
+
+          return [dateString, Number(hour), time];
+        });
+
+        // // Add Labels
+        parsedWateredTimeData.unshift(['Date', 'Time', { role: 'annotation' }]);
+
+          const googleReadyData = google.visualization.arrayToDataTable(parsedWateredTimeData);
+
+          const googleChartOptions = {
+            title: 'Watered Time Data',
+            textStyle: SeedGardenData.textStyles(),
+            titleTextStyle: SeedGardenData.titleTextStyles(),
+            chartArea: SeedGardenData.chartAreaOptions(),
+            legend: {position: 'none'},
+            annotations: {
+              highContrast: true,
+              textStyle: SeedGardenData.textStyles()
+            },
+            width: parsedWateredTimeData.length*75,
+            hAxis: {
+              title: 'Date',
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            },
+            vAxis: {
+              title: 'hour of the day',
+              minValue: 0,
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            }
+          };
+
+          var chart = new google.visualization.ColumnChart(document.getElementById('watered-time-chart'));
+          chart.draw(googleReadyData, googleChartOptions);
+      }
+
+      _waterDurationChart() {
+        let wateredDurationChartData = this.SeedData;
+        const wateredDurationChartDataLength = wateredDurationChartData.length;
+        const wateredIndexs = [];
+
+        for(let i=0; i<wateredDurationChartDataLength; i++){
+          const item = wateredDurationChartData[i];
+
+          if(item.isWatering){
+            const nextItem = wateredDurationChartData[i+1];
+            const startTime = new Date(`${item.date} ${item.time}`);
+            const endTime = new Date(`${nextItem.date} ${nextItem.time}`);
+            const durationTotalSeconds = (endTime.getTime()-startTime.getTime())/1000;
+            const durationMinutes = Math.floor(durationTotalSeconds/60);
+            const durationSeconds = durationTotalSeconds-durationMinutes*60;
+            const durationString = `${durationMinutes}:${durationSeconds}`;
+            const durationFloat = durationMinutes + (durationSeconds/60);
+            const dateString = SeedGardenData.parseDate(item.date);
+
+            wateredIndexs.push([dateString, durationFloat, durationString]);
+          }
+        }
+
+        // // Add Labels
+        wateredIndexs.unshift(['Date', 'Duration', { role: 'annotation' }]);
+
+          const googleReadyData = google.visualization.arrayToDataTable(wateredIndexs);
+
+          const googleChartOptions = {
+            title: 'Watered Duration Data',
+            textStyle: SeedGardenData.textStyles(),
+            titleTextStyle: SeedGardenData.titleTextStyles(),
+            chartArea: SeedGardenData.chartAreaOptions(),
+            legend: {position: 'none'},
+            annotations: {
+              highContrast: true,
+              textStyle: SeedGardenData.textStyles()
+            },
+            width: wateredIndexs.length*75,
+            hAxis: {
+              title: 'Date',
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            },
+            vAxis: {
+              title: 'Duration',
+              minValue: 0,
+              textStyle: SeedGardenData.textStyles(),
+              titleTextStyle: SeedGardenData.titleTextStyles()
+            }
+          };
+
+          var chart = new google.visualization.ColumnChart(document.getElementById('watered-duration-chart'));
+          chart.draw(googleReadyData, googleChartOptions);
+      }
     }
 
     new SeedGardenData();
@@ -316,6 +411,8 @@
 	<div id="temp-chart"></div>
 	<div id="humid-chart"></div>
 	<div id="watered-chart"></div>
+	<div id="watered-time-chart"></div>
+	<div id="watered-duration-chart"></div>
 	<div id="soil-chart"></div>
 
 </body>
