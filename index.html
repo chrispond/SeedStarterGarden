@@ -80,9 +80,12 @@
         let currentDay;
         let days = [];
         let dailyChartData = this.SeedData;
+	const dailyChartDataLength = dailyChartData.length;
+	      
+	      console.log('_dayData', dailyChartData);
         
 
-        for(let i=0; i<dailyChartData.length; i++){
+        for(let i=0; i<dailyChartDataLength; i++){
           const item = dailyChartData[i];
           if(!currentDay || currentDay !== item.date){
             currentDay = item.date;
