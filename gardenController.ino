@@ -2,12 +2,12 @@
 #include <SPI.h>
 #include <SD.h>
 
-#define SdMosiPin 11
-#define SdMisoPin 12
-#define SdClkPin 13
-#define SdCsPin 4
-
-File dataFile;
+const int SdMosiPin = 11;
+const int SdMisoPin = 12;
+const int SdClkPin = 13;
+const int SdCsPin = 4;
+const char dataFileNameA = "seedDataA.csv";
+const char dataFileNameB = "seedDataB.csv";
 
 // For Real Time Capture
 #include <Wire.h>
@@ -22,24 +22,26 @@ RTC_DS3231 rtc;
 #include <DHT.h>
 #include <DHT_U.h>
 
-#define DhtPin 8
+const int DhtPin = 8;
 #define DhtType DHT11
 
 DHT dht(DhtPin, DhtType);
 
 // For Opertating the Seed Starter Garden
-#define soilPinA A0
-#define waterPinA A1
-#define pumpPinA 10
+const char soilPinA = "A0";
+const char waterPinA = "A1";
+const int pumpPinA = 10;
 
-#define soilPinB A2
-#define waterPinB A3
-#define pumpPinB 9
+const char soilPinB = "A2";
+const char waterPinB = "A3";
+const int pumpPinB = 9;
 
 // Global Properties
+bool capturingData = false;
 unsigned long lastWaterA = 0;
 unsigned long lastWaterB = 0;
-unsigned long lastWrite = 0;
+unsigned long lastWriteA = 0;
+unsigned long lastWriteB = 0;
 bool wateringA = false;
 bool wateringB = false;
 long waterFrequency = 60000; // 60,000 milliseconds is 1 Minute
@@ -68,7 +70,7 @@ void setup() {
   dht.begin();
 
   // Kick off data capture
-  CaptureData();
+  // CaptureData();
 }
 
 void loop() {
@@ -85,14 +87,14 @@ void loop() {
   if(plantsNeedWater(soilMoistureA) && !wateringA && !waterLevelFull(waterLevelA) && iCanWaterAgain(currentTime, lastWaterA)){
     digitalWrite(pumpPinA, HIGH);
     wateringA = true;
-    CaptureData();
+    CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
   }
 
   // Start watering tube B
   if(plantsNeedWater(soilMoistureB) && !wateringB && !waterLevelFull(waterLevelB) && iCanWaterAgain(currentTime, lastWaterB)){
     digitalWrite(pumpPinB, HIGH);
     wateringB = true;
-    CaptureData();
+    CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
   }
 
   // Stop watering tube A
@@ -100,7 +102,7 @@ void loop() {
     lastWaterA = currentTime;
     digitalWrite(pumpPinA, LOW);
     wateringA = false;
-    CaptureData();
+    CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
   }
 
   // Stop watering tube B
@@ -108,13 +110,16 @@ void loop() {
     lastWaterB = currentTime;
     digitalWrite(pumpPinB, LOW);
     wateringB = false;
-    CaptureData();
+    CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
   }
 
   // Capture plant data every 5 minutes 
-  if(currentTime - lastWrite > writeFrequency){
-    lastWrite = currentTime;
-    CaptureData();
+  if(currentTime - lastWriteA > writeFrequency && !capturingData){
+    lastWriteA = currentTime;
+    CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
+  }else if(currentTime - lastWriteB > writeFrequency && !capturingData){
+    lastWriteB = currentTime;
+    CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
   }
 }
 
@@ -164,34 +169,29 @@ float GetTemp() {
   return temperature;
 }
 
-void CaptureData() {
-  int waterLevelA = analogRead(waterPinA);
-  int soilMoistureA = analogRead(soilPinA);
-  int waterLevelB = analogRead(waterPinB);
-  int soilMoistureB = analogRead(soilPinB);
+void CaptureData(char dataFileName, int soilMoisture, int waterLevel, bool watering) {
   
-  dataFile = SD.open("seedData.csv", FILE_WRITE);
-  if(dataFile){
+  File dataFile = SD.open(dataFileName, FILE_WRITE);
+  
+  if(dataFile && !capturingData){
+    capturingData = true;
     dataFile.print(GetDate());
     dataFile.print(",");
     dataFile.print(GetTemp());
     dataFile.print(",");
     dataFile.print(GetHumid());
     dataFile.print(",");
-    dataFile.print(soilMoistureA);
+    dataFile.print(soilMoisture);
     dataFile.print(",");
-    dataFile.print(waterLevelA);
+    dataFile.print(waterLevel);
     dataFile.print(",");
-    dataFile.println(wateringA);
-    dataFile.print(",");
-    dataFile.print(soilMoistureB);
-    dataFile.print(",");
-    dataFile.print(waterLevelB);
-    dataFile.print(",");
-    dataFile.println(wateringB);
+    dataFile.println(watering);
     dataFile.close();
+    capturingData = false;
 
     digitalWrite(LED_BUILTIN, LOW);
+  }else if(capturingData){
+    CaptureData(dataFileName, soilMoisture, waterLevel, watering);
   } else {
     digitalWrite(LED_BUILTIN, HIGH);
   }
