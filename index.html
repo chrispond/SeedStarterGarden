@@ -71,7 +71,6 @@
         this._humidChart();
         this._soilChart();
         this._tempChart();
-        this._waterChart();
         this._waterTimeChart();
         this._waterDurationChart();
       }
@@ -103,12 +102,13 @@
           const soilMoisture = day[0].soilMoisture;
           const soilHigh = Math.max.apply(Math, day.map(item => item.soilMoisture));
           const soilLow = Math.min.apply(Math, day.map(item => item.soilMoisture));
-
-          return [dateString, soilMoisture, soilHigh, soilLow];
+          const watered = day.filter(item => item.isWatering).length;
+          const wateredPoint = watered > 0 ? 'point { size: 4; shape-type: diamond; }' : null;
+          return [dateString, soilMoisture, soilHigh, wateredPoint, soilLow];
         });
 
         // // Add Labels
-        parsedSoilData.unshift(['Date', 'Day Start', 'Day High', 'Day Low']);
+        parsedSoilData.unshift(['Date', 'Day Start', 'Day High', {'type': 'string', 'role': 'style'}, 'Day Low']);
 
           const googleReadyData = google.visualization.arrayToDataTable(parsedSoilData);
 
@@ -119,6 +119,7 @@
             chartArea: SeedGardenData.chartAreaOptions(),
             legend: SeedGardenData.chartLegendOptions(),
             width: soilChartData.length*75,
+            pointSize: 1,
             hAxis: {
               title: 'Date',
               textStyle: SeedGardenData.textStyles(),
@@ -143,14 +144,16 @@
           const dateString = SeedGardenData.parseDate(day[0].date);
           const humidHigh = Math.max.apply(Math, day.map(item => item.humid));
           const humidLow = Math.min.apply(Math, day.map(item => item.humid));
-          return [dateString, humidLow, humidHigh ];
+          const watered = day.filter(item => item.isWatering).length;
+          const wateredPoint = watered > 0 ? 'point { size: 4; shape-type: diamond; }' : null;
+          return [dateString, humidLow, humidHigh, wateredPoint ];
         });
 
         const highestValue = Math.max.apply(Math, parsedHumidData.map(item => item[2]));
         const lowestValue = Math.min.apply(Math, parsedHumidData.map(item => item[1]));
 
         // // Add Labels
-        parsedHumidData.unshift(['Date', `Low (${lowestValue}%)`, `High (${highestValue}%)`]);
+        parsedHumidData.unshift(['Date', `Low (${lowestValue}%)`, `High (${highestValue}%)`, {'type': 'string', 'role': 'style'}]);
 
           const googleReadyData = google.visualization.arrayToDataTable(parsedHumidData);
 
@@ -161,6 +164,7 @@
             chartArea: SeedGardenData.chartAreaOptions(),
             legend: SeedGardenData.chartLegendOptions(),
             width: humidChartData.length*75,
+            pointSize: 1,
             hAxis: {
               title: 'Date',
               textStyle: SeedGardenData.textStyles(),
@@ -185,14 +189,16 @@
           const dateString = SeedGardenData.parseDate(day[0].date);
           const tempHigh = Math.max.apply(Math, day.map(item => item.temp));
           const tempLow = Math.min.apply(Math, day.map(item => item.temp));
-          return [dateString, tempLow, tempHigh];
+          const watered = day.filter(item => item.isWatering).length;
+          const wateredPoint = watered > 0 ? 'point { size: 4; shape-type: diamond; }' : null;
+          return [dateString, tempLow, tempHigh, wateredPoint];
         });
 
         const highestValue = Math.max.apply(Math, parsedTempData.map(item => item[2]));
         const lowestValue = Math.min.apply(Math, parsedTempData.map(item => item[1]));
 
         // // Add Labels
-        parsedTempData.unshift(['Date', `Low (${lowestValue})`, `High (${highestValue})`]);
+        parsedTempData.unshift(['Date', `Low (${lowestValue})`, `High (${highestValue})`, {'type': 'string', 'role': 'style'}]);
 
           const googleReadyData = google.visualization.arrayToDataTable(parsedTempData);
 
@@ -203,6 +209,7 @@
             chartArea: SeedGardenData.chartAreaOptions(),
             legend: SeedGardenData.chartLegendOptions(),
             width: tempChartData.length*75,
+            pointSize: 1,
             hAxis: {
               title: 'Date',
               textStyle: SeedGardenData.textStyles(),
@@ -255,52 +262,6 @@
           // If something goes wrong log it
           console.log("Something went wrong", err);
         });
-      }
-
-      _waterChart() {
-        let wateredChartData = this.SeedDayData;
-
-        const parsedWateredData = wateredChartData.map(day => {
-          
-          const dateString = SeedGardenData.parseDate(day[0].date);
-          const time = SeedGardenData.parseDate(day[0].date);
-          const watered = day.filter(item => item.isWatering);
-          const wateredLength = watered.length;
-
-          return [dateString, wateredLength];
-        });
-
-        // // Add Labels
-        parsedWateredData.unshift(['Date', 'Watered']);
-
-          const googleReadyData = google.visualization.arrayToDataTable(parsedWateredData);
-
-          const googleChartOptions = {
-            title: 'Watered Data',
-            textStyle: SeedGardenData.textStyles(),
-            titleTextStyle: SeedGardenData.titleTextStyles(),
-            chartArea: SeedGardenData.chartAreaOptions(),
-            legend: {position: 'none'},
-            annotations: {
-              highContrast: true,
-              textStyle: SeedGardenData.textStyles()
-            },
-            width: wateredChartData.length*75,
-            hAxis: {
-              title: 'Date',
-              textStyle: SeedGardenData.textStyles(),
-              titleTextStyle: SeedGardenData.titleTextStyles()
-            },
-            vAxis: {
-              title: '# of times',
-              minValue: 0,
-              textStyle: SeedGardenData.textStyles(),
-              titleTextStyle: SeedGardenData.titleTextStyles()
-            }
-          };
-
-          var chart = new google.visualization.ColumnChart(document.getElementById('watered-chart'));
-          chart.draw(googleReadyData, googleChartOptions);
       }
 
       _waterTimeChart() {
@@ -413,11 +374,9 @@
 <body>
 	<div id="temp-chart"></div>
 	<div id="humid-chart"></div>
-	<div id="watered-chart"></div>
+	<div id="soil-chart"></div>
 	<div id="watered-time-chart"></div>
 	<div id="watered-duration-chart"></div>
-	<div id="soil-chart"></div>
-
 </body>
 
 </html>
