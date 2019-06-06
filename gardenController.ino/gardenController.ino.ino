@@ -28,24 +28,27 @@ const int DhtPin = 8;
 DHT dht(DhtPin, DhtType);
 
 // For Opertating the Seed Starter Garden
-const char soilPinA = "A0";
-const char waterPinA = "A1";
+#define soilPinA A0
+#define waterPinA A1
 const int pumpPinA = 10;
 
-const char soilPinB = "A2";
-const char waterPinB = "A3";
+#define soilPinB A2
+#define waterPinB A3
 const int pumpPinB = 9;
 
 // Global Properties
+bool firstTimeLoaded = false;
 bool capturingData = false;
+bool wateringA = false;
+bool wateringB = false;
+long waterFrequency = 30000; // 60,000 milliseconds is 1 Minute
+long writeFrequency = 300000; // 300,000 milliseconds is 5 Minutes
+
+unsigned long serialWrite = 0;
 unsigned long lastWaterA = 0;
 unsigned long lastWaterB = 0;
 unsigned long lastWriteA = 0;
 unsigned long lastWriteB = 0;
-bool wateringA = false;
-bool wateringB = false;
-long waterFrequency = 60000; // 60,000 milliseconds is 1 Minute
-long writeFrequency = 300000; // 300,000 milliseconds is 5 Minutes
 
 void setup() {
   Serial.begin(9600);
@@ -83,6 +86,29 @@ void loop() {
   int waterLevelB = analogRead(waterPinB);
   int soilMoistureB = analogRead(soilPinB);
 
+//  if(currentTime - serialWrite > 6000){
+//    serialWrite = currentTime;
+//    Serial.print("Soil Moisture A: ");
+//    Serial.print(soilMoistureA);
+//    Serial.print(" | WaterLevel A: ");
+//    Serial.println(waterLevelA);
+//    Serial.print("Soil Moisture B: ");
+//    Serial.print(soilMoistureB);
+//    Serial.print(" | WaterLevel B: ");
+//    Serial.println(waterLevelB);
+//    Serial.print(GetDate());
+//    Serial.print(",");
+//    Serial.print(GetTemp());
+//    Serial.print(",");
+//    Serial.println(GetHumid());
+//  }
+
+  if(!firstTimeLoaded){
+    digitalWrite(pumpPinA, LOW);
+    digitalWrite(pumpPinB, LOW);
+    firstTimeLoaded = true;
+  }
+
   // Start watering tube A
   if(plantsNeedWater(soilMoistureA) && !wateringA && !waterLevelFull(waterLevelA) && iCanWaterAgain(currentTime, lastWaterA)){
     digitalWrite(pumpPinA, HIGH);
@@ -105,7 +131,7 @@ void loop() {
     CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
   }
 
-  // Stop watering tube B
+//  // Stop watering tube B
   if(waterLevelFull(waterLevelB) && wateringB){
     lastWaterB = currentTime;
     digitalWrite(pumpPinB, LOW);
@@ -124,15 +150,15 @@ void loop() {
 }
 
 bool plantsNeedWater(int soilMoisture){
-  return soilMoisture > 490;
+  return soilMoisture >= 490;
 }
 
 bool waterLevelFull(int waterLevel){
-  return waterLevel > 100;
+  return waterLevel >= 100;
 }
 
 bool iCanWaterAgain(int currentTime, int lastWater){
-  return currentTime - lastWater > waterFrequency;
+  return currentTime - lastWater >= waterFrequency;
 }
 
 String GetDate() {
