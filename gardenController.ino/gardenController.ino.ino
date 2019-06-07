@@ -200,6 +200,9 @@ void CaptureData(char dataFileName, int soilMoisture, int waterLevel, bool water
   File dataFile = SD.open(dataFileName, FILE_WRITE);
   
   if(dataFile && !capturingData){
+    const int constrainedSoilMoisture = constrain(soilMoisture, 350, 520);
+    const int parsedSoilMoisture = map(constrainedSoilMoisture,  350, 520, 100, 0);
+    
     capturingData = true;
     dataFile.print(GetDate());
     dataFile.print(",");
@@ -207,7 +210,7 @@ void CaptureData(char dataFileName, int soilMoisture, int waterLevel, bool water
     dataFile.print(",");
     dataFile.print(GetHumid());
     dataFile.print(",");
-    dataFile.print(soilMoisture);
+    dataFile.print(parsedSoilMoisture);
     dataFile.print(",");
     dataFile.print(waterLevel);
     dataFile.print(",");
