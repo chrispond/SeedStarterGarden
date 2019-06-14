@@ -65,7 +65,6 @@ void setup() {
 
   // Arduino led
   pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
 
   // Init libraries
   SD.begin(4);
@@ -218,10 +217,10 @@ void CaptureData(char dataFileName, int soilMoisture, int waterLevel, bool water
     dataFile.close();
     capturingData = false;
 
-    digitalWrite(LED_BUILTIN, LOW);
+    digitalWrite(LED_BUILTIN, HIGH);
   }else if(capturingData){
     CaptureData(dataFileName, soilMoisture, waterLevel, watering);
   } else {
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(LED_BUILTIN, LOW);
   }
 }
