@@ -2,12 +2,14 @@
 #include <SPI.h>
 #include <SD.h>
 
-const int SdMosiPin = 11;
-const int SdMisoPin = 12;
-const int SdClkPin = 13;
+File dataFile;
+
+// MOSI - pin 11
+// MISO - pin 12
+// CLK - pin 13
 const int SdCsPin = 4;
-const char dataFileNameA = "seedDataA.csv";
-const char dataFileNameB = "seedDataB.csv";
+String dataFileNameA = "SEEDATAA.csv";
+String dataFileNameB = "SEEDATAB.csv";
 
 // For Real Time Capture
 #include <Wire.h>
@@ -41,7 +43,7 @@ bool firstTimeLoaded = false;
 bool capturingData = false;
 bool wateringA = false;
 bool wateringB = false;
-long waterFrequency = 30000; // 60,000 milliseconds is 1 Minute
+long waterFrequency = 60000; // 60,000 milliseconds is 1 Minute
 long writeFrequency = 300000; // 300,000 milliseconds is 5 Minutes
 
 unsigned long serialWrite = 0;
@@ -60,20 +62,20 @@ void setup() {
 
   // TUBE B
   pinMode(soilPinB, INPUT);
-  pinMode(waterPinB, INPUT);
+  pinMode(waterPinB, INPUT); 
   pinMode(pumpPinB, OUTPUT);
 
   // Arduino led
   pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
 
   // Init libraries
-  SD.begin(4);
+  SD.begin(SdCsPin);
   rtc.begin();
   dht.begin();
 
-  // Kick off data capture
-  // CaptureData();
+  CaptureData(dataFileNameA, 0, 0, false);
+  delay(1000);
+  CaptureData(dataFileNameB, 0, 0, false);
 }
 
 void loop() {
@@ -86,39 +88,27 @@ void loop() {
   int waterLevelB = analogRead(waterPinB);
   int soilMoistureB = analogRead(soilPinB);
 
-//  if(currentTime - serialWrite > 6000){
-//    serialWrite = currentTime;
-//    Serial.print("Soil Moisture A: ");
-//    Serial.print(soilMoistureA);
-//    Serial.print(" | WaterLevel A: ");
-//    Serial.println(waterLevelA);
-//    Serial.print("Soil Moisture B: ");
-//    Serial.print(soilMoistureB);
-//    Serial.print(" | WaterLevel B: ");
-//    Serial.println(waterLevelB);
-//    Serial.print(GetDate());
-//    Serial.print(",");
-//    Serial.print(GetTemp());
-//    Serial.print(",");
-//    Serial.println(GetHumid());
-//  }
+  Serial.println(waterLevelA);
 
   if(!firstTimeLoaded){
-    digitalWrite(pumpPinA, LOW);
-    digitalWrite(pumpPinB, LOW);
+    digitalWrite(pumpPinA, HIGH);
+    digitalWrite(pumpPinB, HIGH);
     firstTimeLoaded = true;
+
+    // Delay so that the sensors have time to level out
+    delay(writeFrequency);
   }
 
   // Start watering tube A
   if(plantsNeedWater(soilMoistureA) && !wateringA && !waterLevelFull(waterLevelA) && iCanWaterAgain(currentTime, lastWaterA)){
-    digitalWrite(pumpPinA, HIGH);
+    digitalWrite(pumpPinA, LOW);
     wateringA = true;
     CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
   }
 
   // Start watering tube B
   if(plantsNeedWater(soilMoistureB) && !wateringB && !waterLevelFull(waterLevelB) && iCanWaterAgain(currentTime, lastWaterB)){
-    digitalWrite(pumpPinB, HIGH);
+    digitalWrite(pumpPinB, LOW);
     wateringB = true;
     CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
   }
@@ -126,7 +116,7 @@ void loop() {
   // Stop watering tube A
   if(waterLevelFull(waterLevelA) && wateringA){
     lastWaterA = currentTime;
-    digitalWrite(pumpPinA, LOW);
+    digitalWrite(pumpPinA, HIGH);
     wateringA = false;
     CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
   }
@@ -134,7 +124,7 @@ void loop() {
 //  // Stop watering tube B
   if(waterLevelFull(waterLevelB) && wateringB){
     lastWaterB = currentTime;
-    digitalWrite(pumpPinB, LOW);
+    digitalWrite(pumpPinB, HIGH);
     wateringB = false;
     CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
   }
@@ -147,6 +137,8 @@ void loop() {
     lastWriteB = currentTime;
     CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
   }
+  
+  delay(500);
 }
 
 bool plantsNeedWater(int soilMoisture){
@@ -195,11 +187,14 @@ float GetTemp() {
   return temperature;
 }
 
-void CaptureData(char dataFileName, int soilMoisture, int waterLevel, bool watering) {
+void CaptureData(String dataFileName, int soilMoisture, int waterLevel, bool watering) {
   
-  File dataFile = SD.open(dataFileName, FILE_WRITE);
+  dataFile = SD.open(dataFileName, FILE_WRITE);
   
   if(dataFile && !capturingData){
+    const int constrainedSoilMoisture = constrain(soilMoisture, 350, 520);
+    const int parsedSoilMoisture = map(constrainedSoilMoisture, 350, 520, 100, 0);
+
     capturingData = true;
     dataFile.print(GetDate());
     dataFile.print(",");
@@ -207,7 +202,7 @@ void CaptureData(char dataFileName, int soilMoisture, int waterLevel, bool water
     dataFile.print(",");
     dataFile.print(GetHumid());
     dataFile.print(",");
-    dataFile.print(soilMoisture);
+    dataFile.print(parsedSoilMoisture);
     dataFile.print(",");
     dataFile.print(waterLevel);
     dataFile.print(",");
@@ -215,10 +210,10 @@ void CaptureData(char dataFileName, int soilMoisture, int waterLevel, bool water
     dataFile.close();
     capturingData = false;
 
-    digitalWrite(LED_BUILTIN, LOW);
+    digitalWrite(LED_BUILTIN, HIGH);
   }else if(capturingData){
     CaptureData(dataFileName, soilMoisture, waterLevel, watering);
   } else {
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(LED_BUILTIN, LOW);
   }
 }
