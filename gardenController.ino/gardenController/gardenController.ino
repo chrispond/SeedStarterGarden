@@ -32,11 +32,11 @@ DHT dht(DhtPin, DhtType);
 // For Opertating the Seed Starter Garden
 #define soilPinA A0
 #define waterPinA A1
-const int pumpPinA = 10;
+#define pumpPinA 10
 
 #define soilPinB A2
 #define waterPinB A3
-const int pumpPinB = 9;
+#define pumpPinB 9
 
 // Global Properties
 bool firstTimeLoaded = false;
@@ -88,7 +88,26 @@ void loop() {
   int waterLevelB = analogRead(waterPinB);
   int soilMoistureB = analogRead(soilPinB);
 
-  Serial.println(waterLevelA);
+//  Serial.print("Water Level A: ");
+//  Serial.println(waterLevelA);
+//  Serial.print("Soil Moisture A: ");
+//  Serial.println(soilMoistureA);
+//  Serial.print("Need water: ");
+//  Serial.println(plantsNeedWater(soilMoistureA));
+//  Serial.print("Watering: ");
+//  Serial.println(!wateringA);
+//  Serial.print("Water Level: ");
+//  Serial.println(!waterLevelFull(waterLevelA));
+//  Serial.print("Can Water Again: ");
+//  Serial.println(iCanWaterAgain(currentTime, lastWaterA));
+//  Serial.print("SHould be working: ");
+//  Serial.println((plantsNeedWater(soilMoistureA) && !wateringA && !waterLevelFull(waterLevelA) && iCanWaterAgain(currentTime, lastWaterA)));
+//  Serial.println(currentTime - lastWaterA);
+//  Serial.println(waterFrequency);
+//  Serial.println(currentTime - lastWaterA > waterFrequency);
+//  Serial.println(" ");
+//  Serial.println("===================");
+//  Serial.println(" ");
 
   if(!firstTimeLoaded){
     digitalWrite(pumpPinA, HIGH);
@@ -146,11 +165,11 @@ bool plantsNeedWater(int soilMoisture){
 }
 
 bool waterLevelFull(int waterLevel){
-  return waterLevel >= 100;
+  return waterLevel >= 10;
 }
 
-bool iCanWaterAgain(int currentTime, int lastWater){
-  return currentTime - lastWater >= waterFrequency;
+bool iCanWaterAgain(unsigned long currentTime, unsigned long lastWater){
+  return (currentTime - lastWater > waterFrequency);
 }
 
 String GetDate() {
