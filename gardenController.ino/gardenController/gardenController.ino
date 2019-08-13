@@ -161,7 +161,7 @@ void loop() {
 }
 
 bool plantsNeedWater(int soilMoisture){
-  return soilMoisture >= 490;
+  return soilMoisture >= 520;
 }
 
 bool waterLevelFull(int waterLevel){
