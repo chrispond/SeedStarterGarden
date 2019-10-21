@@ -32,11 +32,11 @@ DHT dht(DhtPin, DhtType);
 // For Opertating the Seed Starter Garden
 #define soilPinA A0
 #define waterPinA A1
-#define pumpPinA 10
-
+//#define pumpPinA 10
+//
 #define soilPinB A2
 #define waterPinB A3
-#define pumpPinB 9
+//#define pumpPinB 9
 
 // Global Properties
 bool firstTimeLoaded = false;
@@ -58,15 +58,12 @@ void setup() {
   // TUBE A
   pinMode(soilPinA, INPUT);
   pinMode(waterPinA, INPUT);
-  pinMode(pumpPinA, OUTPUT);
+//  pinMode(pumpPinA, OUTPUT);
 
   // TUBE B
   pinMode(soilPinB, INPUT);
   pinMode(waterPinB, INPUT); 
-  pinMode(pumpPinB, OUTPUT);
-
-  // Arduino led
-  pinMode(LED_BUILTIN, OUTPUT);
+//  pinMode(pumpPinB, OUTPUT);
 
   // Init libraries
   SD.begin(SdCsPin);
@@ -88,65 +85,44 @@ void loop() {
   int waterLevelB = analogRead(waterPinB);
   int soilMoistureB = analogRead(soilPinB);
 
-//  Serial.print("Water Level A: ");
-//  Serial.println(waterLevelA);
-//  Serial.print("Soil Moisture A: ");
-//  Serial.println(soilMoistureA);
-//  Serial.print("Need water: ");
-//  Serial.println(plantsNeedWater(soilMoistureA));
-//  Serial.print("Watering: ");
-//  Serial.println(!wateringA);
-//  Serial.print("Water Level: ");
-//  Serial.println(!waterLevelFull(waterLevelA));
-//  Serial.print("Can Water Again: ");
-//  Serial.println(iCanWaterAgain(currentTime, lastWaterA));
-//  Serial.print("SHould be working: ");
-//  Serial.println((plantsNeedWater(soilMoistureA) && !wateringA && !waterLevelFull(waterLevelA) && iCanWaterAgain(currentTime, lastWaterA)));
-//  Serial.println(currentTime - lastWaterA);
-//  Serial.println(waterFrequency);
-//  Serial.println(currentTime - lastWaterA > waterFrequency);
-//  Serial.println(" ");
-//  Serial.println("===================");
-//  Serial.println(" ");
-
-  if(!firstTimeLoaded){
-    digitalWrite(pumpPinA, HIGH);
-    digitalWrite(pumpPinB, HIGH);
-    firstTimeLoaded = true;
-
-    // Delay so that the sensors have time to level out
-    delay(writeFrequency);
-  }
+//  if(!firstTimeLoaded){
+//    digitalWrite(pumpPinA, HIGH);
+//    digitalWrite(pumpPinB, HIGH);
+//    firstTimeLoaded = true;
+//
+//    // Delay so that the sensors have time to level out
+//    delay(writeFrequency);
+//  }
 
   // Start watering tube A
-  if(plantsNeedWater(soilMoistureA) && !wateringA && !waterLevelFull(waterLevelA) && iCanWaterAgain(currentTime, lastWaterA)){
-    digitalWrite(pumpPinA, LOW);
-    wateringA = true;
-    CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
-  }
+//  if(plantsNeedWater(soilMoistureA) && !wateringA && !waterLevelFull(waterLevelA) && iCanWaterAgain(currentTime, lastWaterA)){
+//    digitalWrite(pumpPinA, LOW);
+//    wateringA = true;
+//    CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
+//  }
 
   // Start watering tube B
-  if(plantsNeedWater(soilMoistureB) && !wateringB && !waterLevelFull(waterLevelB) && iCanWaterAgain(currentTime, lastWaterB)){
-    digitalWrite(pumpPinB, LOW);
-    wateringB = true;
-    CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
-  }
+//  if(plantsNeedWater(soilMoistureB) && !wateringB && !waterLevelFull(waterLevelB) && iCanWaterAgain(currentTime, lastWaterB)){
+//    digitalWrite(pumpPinB, LOW);
+//    wateringB = true;
+//    CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
+//  }
 
   // Stop watering tube A
-  if(waterLevelFull(waterLevelA) && wateringA){
-    lastWaterA = currentTime;
-    digitalWrite(pumpPinA, HIGH);
-    wateringA = false;
-    CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
-  }
+//  if(waterLevelFull(waterLevelA) && wateringA){
+//    lastWaterA = currentTime;
+//    digitalWrite(pumpPinA, HIGH);
+//    wateringA = false;
+//    CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
+//  }
 
-//  // Stop watering tube B
-  if(waterLevelFull(waterLevelB) && wateringB){
-    lastWaterB = currentTime;
-    digitalWrite(pumpPinB, HIGH);
-    wateringB = false;
-    CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
-  }
+  // Stop watering tube B
+//  if(waterLevelFull(waterLevelB) && wateringB){
+//    lastWaterB = currentTime;
+//    digitalWrite(pumpPinB, HIGH);
+//    wateringB = false;
+//    CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
+//  }
 
   // Capture plant data every 5 minutes 
   if(currentTime - lastWriteA > writeFrequency && !capturingData){
@@ -157,7 +133,7 @@ void loop() {
     CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
   }
   
-  delay(500);
+  delay(30000);
 }
 
 bool plantsNeedWater(int soilMoisture){
@@ -228,11 +204,7 @@ void CaptureData(String dataFileName, int soilMoisture, int waterLevel, bool wat
     dataFile.println(watering);
     dataFile.close();
     capturingData = false;
-
-    digitalWrite(LED_BUILTIN, HIGH);
   }else if(capturingData){
     CaptureData(dataFileName, soilMoisture, waterLevel, watering);
-  } else {
-    digitalWrite(LED_BUILTIN, LOW);
   }
 }
