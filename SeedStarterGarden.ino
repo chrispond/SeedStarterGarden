@@ -32,7 +32,7 @@ DHT dht(DhtPin, DhtType);
 // For Opertating the Seed Starter Garden
 #define soilPinA A0
 #define waterPinA A1
-//#define pumpPinA 10
+#define pumpPinA 10
 //
 #define soilPinB A2
 #define waterPinB A3
@@ -58,7 +58,7 @@ void setup() {
   // TUBE A
   pinMode(soilPinA, INPUT);
   pinMode(waterPinA, INPUT);
-//  pinMode(pumpPinA, OUTPUT);
+  pinMode(pumpPinA, OUTPUT);
 
   // TUBE B
   pinMode(soilPinB, INPUT);
@@ -85,21 +85,21 @@ void loop() {
   int waterLevelB = analogRead(waterPinB);
   int soilMoistureB = analogRead(soilPinB);
 
-//  if(!firstTimeLoaded){
-//    digitalWrite(pumpPinA, HIGH);
-//    digitalWrite(pumpPinB, HIGH);
-//    firstTimeLoaded = true;
-//
-//    // Delay so that the sensors have time to level out
-//    delay(writeFrequency);
-//  }
+  if(!firstTimeLoaded){
+    digitalWrite(pumpPinA, HIGH);
+    // digitalWrite(pumpPinB, HIGH);
+    firstTimeLoaded = true;
+
+    // Delay so that the sensors have time to level out
+    delay(writeFrequency);
+  }
 
   // Start watering tube A
-//  if(plantsNeedWater(soilMoistureA) && !wateringA && !waterLevelFull(waterLevelA) && iCanWaterAgain(currentTime, lastWaterA)){
-//    digitalWrite(pumpPinA, LOW);
-//    wateringA = true;
-//    CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
-//  }
+  if(plantsNeedWater(soilMoistureA) && !wateringA && !waterLevelFull(waterLevelA) && iCanWaterAgain(currentTime, lastWaterA)){
+    digitalWrite(pumpPinA, LOW);
+    wateringA = true;
+    CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
+  }
 
   // Start watering tube B
 //  if(plantsNeedWater(soilMoistureB) && !wateringB && !waterLevelFull(waterLevelB) && iCanWaterAgain(currentTime, lastWaterB)){
@@ -109,12 +109,12 @@ void loop() {
 //  }
 
   // Stop watering tube A
-//  if(waterLevelFull(waterLevelA) && wateringA){
-//    lastWaterA = currentTime;
-//    digitalWrite(pumpPinA, HIGH);
-//    wateringA = false;
-//    CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
-//  }
+  if(waterLevelFull(waterLevelA) && wateringA){
+    lastWaterA = currentTime;
+    digitalWrite(pumpPinA, HIGH);
+    wateringA = false;
+    CaptureData(dataFileNameA, soilMoistureA, waterLevelA, wateringA);
+  }
 
   // Stop watering tube B
 //  if(waterLevelFull(waterLevelB) && wateringB){
@@ -133,7 +133,7 @@ void loop() {
     CaptureData(dataFileNameB, soilMoistureB, waterLevelB, wateringB);
   }
   
-  delay(30000);
+  delay(500);
 }
 
 bool plantsNeedWater(int soilMoisture){
