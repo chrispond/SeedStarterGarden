@@ -136,8 +136,8 @@ void loop() {
   delay(500);
 }
 
-bool plantsNeedWater(int soilMoisture){
-  return soilMoisture >= 520;
+bool plantsNeedWater(int soilMoisture){  
+  return soilMoisture >= 475;
 }
 
 bool waterLevelFull(int waterLevel){
