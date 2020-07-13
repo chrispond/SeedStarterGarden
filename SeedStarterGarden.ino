@@ -25,7 +25,7 @@ RTC_DS3231 rtc;
 #include <DHT_U.h>
 
 const int DhtPin = 8;
-#define DhtType DHT11
+#define DhtType DHT22
 
 DHT dht(DhtPin, DhtType);
 
@@ -144,23 +144,38 @@ bool waterLevelFull(int waterLevel){
   return waterLevel >= 10;
 }
 
+bool morningWaterHours(){
+  DateTime now = rtc.now();
+  int hour = int(now.hour());
+  return (hour >= 4 && hour <= 6);
+}
+
 bool iCanWaterAgain(unsigned long currentTime, unsigned long lastWater){
   return (currentTime - lastWater > waterFrequency);
 }
 
 String GetDate() {
   DateTime now = rtc.now();
-  String comma = String(',');
-  String colon = String(':');
-  String dash = String('-');
-  String year = String(now.year());
-  String month = String(now.month());
-  String day = String(now.day());
-  String hour = String(now.hour());
-  String minute = String(now.minute());
-  String second = String(now.second());
+  int year = int(now.year());
+  int month = int(now.month());
+  int day = int(now.day());
+
+  char dateStamp[100];
+  sprintf(dateStamp, "%d-%02d-%02d", year, month, day);
   
-  return String(year + dash + month + dash + day + comma + hour + colon + minute + colon + second);
+  return dateStamp;
+}
+
+String GetTime() {
+  DateTime now = rtc.now();
+  int hours = int(now.hour());
+  int minutes = int(now.minute());
+  int seconds = int(now.second());
+  
+  char timeStamp[100];
+  sprintf(timeStamp, "%02d:%02d:%02d", hours, minutes, seconds);
+  
+  return timeStamp;
 }
 
 int GetHumid() {
@@ -192,6 +207,8 @@ void CaptureData(String dataFileName, int soilMoisture, int waterLevel, bool wat
 
     capturingData = true;
     dataFile.print(GetDate());
+    dataFile.print(",");
+    dataFile.print(GetTime());
     dataFile.print(",");
     dataFile.print(GetTemp());
     dataFile.print(",");
