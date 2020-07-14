@@ -70,6 +70,11 @@ void setup() {
   rtc.begin();
   dht.begin();
 
+  // Set the proper time if it isn't set
+  if (rtc.lostPower()) {
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
+
   CaptureData(dataFileNameA, 0, 0, false);
   delay(1000);
   CaptureData(dataFileNameB, 0, 0, false);
